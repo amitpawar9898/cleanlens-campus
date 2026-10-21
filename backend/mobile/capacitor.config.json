@@ -1,0 +1,7 @@
+{
+  "appId": "edu.sit.cleanlens",
+  "appName": "SIT CleanLens",
+  "webDir": "www",
+  "server": { "url": "https://YOUR-DOMAIN-HERE", "cleartext": false },
+  "android": { "allowMixedContent": false }
+}

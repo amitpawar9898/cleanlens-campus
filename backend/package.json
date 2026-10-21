@@ -1,0 +1,38 @@
+{
+  "name": "cleanlens-backend",
+  "version": "1.0.0",
+  "description": "SIT CleanLens Campus - REST API (Express + PostgreSQL)",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "migrate": "node db/migrate.js",
+    "seed": "node db/seed.js",
+    "clean:demo": "node db/clean-demo.js",
+    "test:ai": "node test/ai-adapters.js",
+    "test:detection": "node test/detection.js",
+    "test:syntax": "node test/syntax.js",
+    "smoke": "node test/smoke.js",
+    "test:ui": "node test/ui.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@google/genai": "^2.30.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.12.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "jsdom": "^25.0.0"
+  }
+}

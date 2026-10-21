@@ -1,0 +1,32 @@
+const assert=require('node:assert/strict');
+const cfg=require('../src/config');
+const detector=require('../src/services/detection');
+
+const valid={objects:[{label:'mango',category:'fruit',condition:'Rotten/Mouldy',box_2d:[100,200,400,600],confidence:null,evidence:'Visible mould spots'}],overall_condition:'Needs Improvement'};
+(async()=>{
+  cfg.geminiApiKey='test-key';cfg.geminiModel='test-vision-model';
+  let request;
+  detector.setClientForTest({models:{generateContent:async value=>{request=value;return{text:JSON.stringify(valid)}}}});
+  const bytes=Buffer.from('original image bytes');
+  const result=await detector.analyzeGemini(bytes,'image/jpeg');
+  assert.equal(request.model,'test-vision-model');
+  assert.equal(Buffer.from(request.contents[1].inlineData.data,'base64').toString(),bytes.toString());
+  assert.deepEqual(result.objects[0].bbox,{x:.2,y:.1,width:.4,height:.3});
+  assert.equal(result.objects[0].confidence,null,'Gemini confidence must not be fabricated');
+  assert.equal(result.objects[0].source,'gemini');
+  const local={label:'apple',category:'fruit',condition:'Uncertain',box_2d:[100,200,400,600],confidence:71,evidence:'',source:'yolo'};
+  const fused=detector.merge([local],result.objects);
+  assert.equal(fused.length,1,'matched local and Gemini boxes must not be double-counted');
+  assert.equal(fused[0].source,'hybrid');
+  assert.equal(detector.assess({objects:[]}).shouldFallback,true);
+  detector.setClientForTest({models:{generateContent:async()=>({text:'not json'})}});
+  const malformed=await detector.analyzeGemini(bytes,'image/jpeg');
+  assert.equal(malformed.objects.length,0);
+  assert.match(malformed.warning,/failed/);
+  detector.setClientForTest({models:{generateContent:async()=>{const e=new Error('quota');e.status=429;throw e}}});
+  const quota=await detector.analyzeGemini(bytes,'image/jpeg');
+  assert.equal(quota.error_code,'quota');
+  detector.setClientForTest(null);
+  cfg.geminiApiKey='';
+  console.log('PASS Gemini schema, image forwarding, coordinates, merge, no fabricated confidence, malformed JSON and quota fallback');
+})().catch(e=>{console.error(e);process.exitCode=1}).finally(()=>detector.setClientForTest(null));

@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgres:16
+    environment: { POSTGRES_PASSWORD: postgres, POSTGRES_DB: cleanlens }
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+  api:
+    build: .
+    env_file: .env
+    environment: { DATABASE_URL: "postgres://postgres:postgres@db:5432/cleanlens" }
+    ports: ["4000:4000"]
+    volumes: [uploads:/app/uploads]
+    depends_on: [db]
+volumes: { pgdata: {}, uploads: {} }

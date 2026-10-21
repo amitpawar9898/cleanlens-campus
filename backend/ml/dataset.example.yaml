@@ -1,0 +1,23 @@
+# Copy to dataset.yaml and set path to your labeled YOLO dataset root.
+path: C:/path/to/food-dataset
+train: images/train
+val: images/val
+test: images/test
+names:
+  0: apple
+  1: banana
+  2: orange
+  3: mango
+  4: grapes
+  5: papaya
+  6: watermelon
+  7: potato
+  8: tomato
+  9: onion
+  10: carrot
+  11: cabbage
+  12: cauliflower
+  13: cucumber
+  14: capsicum
+  15: leafy_vegetable
+  16: food_scraps

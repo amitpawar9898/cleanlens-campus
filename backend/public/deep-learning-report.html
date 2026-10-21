@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d5c46">
+  <title>CleanLens | Deep Learning Report</title>
+  <style>
+    :root{color-scheme:light;--green:#0d5c46;--ink:#17262b;--muted:#627378;--line:#dfe9e5;--soft:#f2f7f4}
+    *{box-sizing:border-box}body{margin:0;background:var(--soft);color:var(--ink);font:15px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif}
+    header{background:linear-gradient(120deg,#073b2e,#0d694e);color:white;padding:48px max(24px,calc((100vw - 920px)/2)) 40px}
+    header a{color:#d2f1e3}header h1{font-size:clamp(30px,5vw,48px);line-height:1.1;margin:20px 0 10px}header p{max-width:720px;color:#e1f2eb}
+    main{max-width:920px;margin:28px auto;padding:0 20px 56px}.card{background:white;border:1px solid var(--line);border-radius:14px;padding:24px;margin:16px 0;box-shadow:0 5px 18px rgba(15,60,43,.05)}
+    h2{font-size:22px;margin:0 0 12px}h3{margin:18px 0 6px;font-size:16px}.muted{color:var(--muted)}.badge{display:inline-block;background:#fff2d9;color:#8a5100;border-radius:20px;padding:4px 11px;font-size:12px;font-weight:700}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}.tile{background:#f4f8f6;border-radius:10px;padding:14px}.tile b{display:block;color:var(--green);font-size:18px}
+    code{background:#eff4f1;padding:2px 5px;border-radius:4px}ol,ul{padding-left:22px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}.button{border:0;border-radius:8px;background:#0d5c46;color:white;padding:10px 15px;font:inherit;font-weight:650;text-decoration:none;cursor:pointer}.button.secondary{background:white;color:#0d5c46;border:1px solid var(--line)}footer{color:var(--muted);font-size:13px;padding-top:10px}
+    @media print{body{background:white}.card{box-shadow:none;break-inside:avoid}header{padding:28px;color:#10251c;background:white;border-bottom:2px solid #0d5c46}header p,header a{color:#334b40}.actions{display:none}main{margin:12px auto}}
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/">← SIT CleanLens home</a>
+    <h1>Deep Learning Report</h1>
+    <p>AI visual inspection for fruit, vegetables, and visible food waste in the SIT CleanLens campus cleanliness workflow.</p>
+    <span class="badge">Implementation report · model-specific performance not yet measured</span>
+  </header>
+  <main>
+    <section class="card">
+      <h2>Project summary</h2>
+      <p>CleanLens lets a user submit an inspection photo, runs an on-device object detector, displays detected objects and bounding boxes, and stores the inspection result with its image and selected campus location. When configured by the server, optional Gemini vision assistance can supplement incomplete local detections.</p>
+      <div class="grid">
+        <div class="tile"><b>YOLO11n · ONNX</b><span class="muted">Browser inference using the bundled compact COCO model</span></div>
+        <div class="tile"><b>Local first</b><span class="muted">Image detection runs in the browser; cloud help is optional</span></div>
+        <div class="tile"><b>PostgreSQL</b><span class="muted">Persists inspection, reviewer feedback, and location references</span></div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>Detection pipeline</h2>
+      <ol>
+        <li>The selected image is resized for browser inference and prepared as a 640 × 640 model input.</li>
+        <li>YOLO returns object class scores and box coordinates. The app decodes supported channel-first and row-oriented output tensors, applies a configurable confidence threshold and class-aware non-maximum suppression, and draws the surviving boxes.</li>
+        <li>Each local object is shown with its class, location in the image, and detector score. The stock model does not determine freshness; condition is shown as uncertain unless a configured vision provider supplies a visual estimate.</li>
+        <li>When server-side Gemini is configured and cloud assistance is enabled, the backend can request structured object labels, visible-condition estimates, and normalized image boxes. Cloud confidence is not presented as a measured detector score.</li>
+        <li>The inspection API saves the result, object list, image, building/area, and processing metadata. Students can view their own inspection history; authorized reviewers handle formal findings.</li>
+      </ol>
+    </section>
+    <section class="card">
+      <h2>Model and data status</h2>
+      <p>The bundled <code>yolo11n.onnx</code> is a general COCO model. It can recognize some everyday classes such as apple, banana, orange, broccoli, and carrot. It is not trained for every local fruit, campus litter, decomposition, or mould. A class name added in settings does not teach the model that class.</p>
+      <p><b>No project-specific training dataset or measured evaluation results are included.</b> Therefore this report does not claim precision, recall, mAP, or reliable spoilage classification for CleanLens. Values must be measured after collecting and annotating a representative dataset.</p>
+    </section>
+    <section class="card">
+      <h2>Training and evaluation plan</h2>
+      <ul>
+        <li>Gather images for each target fruit, vegetable, and waste class across lighting, camera, distance, background, and clutter variations.</li>
+        <li>Annotate object bounding boxes and split by scene/source into training, validation, and held-out test sets to reduce data leakage.</li>
+        <li>Train and export using the repository workflow in <code>backend/ml/README.md</code> and <code>backend/ml/train_export.py</code>.</li>
+        <li>Report precision, recall, mAP@0.5, and mAP@0.5:0.95 on the held-out test set, plus per-class results and failure examples.</li>
+        <li>Evaluate freshness estimation separately against human-reviewed labels. Visual appearance alone must not be presented as a food-safety determination.</li>
+      </ul>
+      <p class="muted">The training workflow writes a separate ONNX model; it does not overwrite the bundled model automatically.</p>
+    </section>
+    <section class="card">
+      <h2>Privacy and limitations</h2>
+      <p>Local detection stays in the browser. If cloud assistance is enabled, inspection images may be sent to the configured Gemini provider when local results appear incomplete, unless server settings force verification. Keep provider credentials in backend environment variables. Detection can miss objects or mislabel visually similar items; review results before creating a complaint.</p>
+      <div class="actions"><a class="button secondary" href="/">Back to CleanLens</a><button class="button" onclick="window.print()">Print / Save as PDF</button></div>
+    </section>
+    <footer>Prepared from the current CleanLens implementation. Dataset training and measured performance remain future work until project images are supplied and evaluated.</footer>
+  </main>
+</body>
+</html>
