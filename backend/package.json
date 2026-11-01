@@ -8,6 +8,7 @@
     "dev": "node --watch src/server.js",
     "migrate": "node db/migrate.js",
     "seed": "node db/seed.js",
+    "seed:sit": "node db/seed-sit.js",
     "clean:demo": "node db/clean-demo.js",
     "test:ai": "node test/ai-adapters.js",
     "test:detection": "node test/detection.js",

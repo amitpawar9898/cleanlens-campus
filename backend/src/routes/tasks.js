@@ -137,7 +137,7 @@ router.patch('/:id', role('admin', 'staff'), ah(async (req, res) => {
   res.json(result);
 }));
 
-async function mine(req, db = q, lock = false) {
+async function mine(req, db = pool, lock = false) {
   const suffix = lock ? ' FOR UPDATE OF t' : '';
   const t = (await db.query(`${SEL} WHERE t.id=$1${suffix}`, [req.params.id])).rows[0];
   if (!t) throw new HttpError(404, 'Task not found');
