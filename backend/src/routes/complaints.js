@@ -5,7 +5,7 @@ const { signed } = require('../services/files'), { audit } = require('../service
 const DEPT = { Cleaning: 'Housekeeping', Maintenance: 'Maintenance', Waste: 'Waste Management', Pest: 'Pest Control', Other: 'Admin Office' };
 const NEXT = { Submitted: ['Reviewed', 'Rejected'], Open: ['Reviewed', 'Rejected'], Reviewed: ['Rejected'], Assigned: [], 'In Progress': [], 'Pending Verification': [], Resolved: ['Closed', 'Reopened'], Closed: ['Reopened'], Rejected: ['Reopened'], Reopened: ['Rejected'] };
 const CATS = ['Cleaning', 'Maintenance', 'Waste', 'Pest', 'Other'], PRI = ['Low', 'Medium', 'High', 'Critical'], STAT = ['Submitted', 'Open', 'Reviewed', 'Assigned', 'In Progress', 'Pending Verification', 'Resolved', 'Closed', 'Rejected', 'Reopened'];
-const deptId = async (cat, db = q) => (await db.query('SELECT id FROM departments WHERE name=$1', [DEPT[cat]])).rows[0]?.id || null;
+const deptId = async (cat, db = pool) => (await db.query('SELECT id FROM departments WHERE name=$1', [DEPT[cat]])).rows[0]?.id || null;
 const SEL = `SELECT c.*,b.name building,s.name spot,s.floor,u.name reporter,a.name assignee,d.name department FROM complaints c
   LEFT JOIN buildings b ON b.id=c.building_id LEFT JOIN spots s ON s.id=c.spot_id JOIN users u ON u.id=c.reporter_id
   LEFT JOIN users a ON a.id=c.assigned_to LEFT JOIN departments d ON d.id=c.department_id`;
@@ -80,7 +80,7 @@ router.get('/', ah(async (req, res) => {
   const total = (await q(`SELECT count(*)::int n FROM complaints c ${where}`, p)).rows[0].n;
   res.json({ page: pg, limit, total, items });
 }));
-async function load(id, user, db = q, lock = false) {
+async function load(id, user, db = pool, lock = false) {
   const p = [id], s = scope(user, p);
   const c = (await db.query(`${SEL} WHERE c.id=$1 AND ${s}${lock ? ' FOR UPDATE OF c' : ''}`, p)).rows[0];
   if (!c) throw new HttpError(404, 'Complaint not found'); return c;

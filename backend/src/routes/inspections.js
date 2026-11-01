@@ -17,7 +17,8 @@ router.post('/', disk.single('image'), ah(async (req, res) => {
         category:z.enum(['Cleaning','Maintenance','Waste','Pest','Other']).optional(),priority:z.enum(['Low','Medium','High','Critical']).optional(),
         title:z.string().max(120).optional(),description:z.string().max(1200).optional(),building:z.string().max(120).optional(),floor:z.string().max(80).optional(),spot:z.string().max(120).optional(),mode:z.string().max(120).optional(),
         objects:z.array(z.object({label:z.string().min(1).max(80),category:z.enum(['fruit','vegetable','food_waste','other']),condition:z.enum(['Fresh','Damaged','Rotten/Mouldy','Uncertain']),box_2d:z.array(z.number().min(0).max(1000)).length(4).refine(([y0,x0,y1,x1])=>y1>y0&&x1>x0),confidence:z.number().min(0).max(100).nullable(),evidence:z.string().max(240),source:z.enum(['yolo','gemini','hybrid']).optional()}).strict()).max(100).optional(),
-        overall_condition:z.enum(['Good','Needs Improvement','Poor','Critical','Uncertain']).optional(),detection_source:z.enum(['yolo','gemini','hybrid','none']).optional(),processing_ms:z.number().int().nonnegative().optional(),warning:z.string().max(240).nullable().optional(),cloud_assist:z.boolean().optional()
+        overall_condition:z.enum(['Good','Needs Improvement','Poor','Critical','Uncertain']).optional(),detection_source:z.enum(['yolo','gemini','hybrid','none']).optional(),processing_ms:z.number().int().nonnegative().optional(),warning:z.string().max(240).nullable().optional(),cloud_assist:z.boolean().optional(),
+        cleanlens:z.boolean().optional(),scene:z.object({label:z.enum(['clean','dirty']),p_dirty:z.number().min(0).max(1)}).strict().optional()
       }).parse(JSON.parse(req.body.client_ai));
     } catch { await fs.promises.unlink(path.join(cfg.uploadDir,req.file.filename)).catch(()=>{}); throw new HttpError(400,'The supplied inspection AI result is invalid. Analyze the photo again and retry.'); }
   }
